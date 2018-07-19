@@ -6,13 +6,22 @@
 #
 # @author Jeff Geerling, 2014, 2017
 
+mkdir -p {{ backup_path }}/{databases,directories}
+
+find {{ backup_path }}/{databases,directories} -type f -mtime +30 -exec rm {} \;
+
 # Common variables.
-REMOTE="{{ backup_remote_connection }}"
-RSYNC=/usr/bin/rsync
+timestamp() {
+  date +"%Y%m%d%H%M"
+}
 
 # Backup individual directories.
 {% for directory in backup_directories %}
-$RSYNC -aqz -e 'ssh {{ backup_remote_connection_ssh_options }}' --delete --exclude-from '{{ backup_path }}/backup-exclude.txt' {{ directory }} $REMOTE:{{ backup_remote_base_path }}/{{ backup_identifier }}
+tar \
+    -zcf \
+    {{ backup_path }}/directories/$(basename {{ directory }})-$(timestamp).tar.gz \
+    --exclude-from='{{ backup_path }}/backup-exclude.txt' \
+    {{ directory }}
 {% endfor %}
 
 {% if backup_mysql %}
@@ -22,7 +31,7 @@ MYSQLDUMP=/usr/bin/mysqldump
 {% if backup_mysql_credential_file != '' %}
 MYSQL_CREDENTIALS="--defaults-extra-file={{ backup_mysql_credential_file }}"
 {% else %}
-MYSQL_CREDENTIALS= "-u {{ backup_mysql_user }} -p{{ backup_mysql_password }}"
+MYSQL_CREDENTIALS="-u {{ backup_mysql_user }} -p{{ backup_mysql_password }}"
 {% endif %}
 
 # Dump all MySQL databases.
@@ -30,9 +39,6 @@ DATABASES=`$MYSQL $MYSQL_CREDENTIALS -e "SHOW DATABASES;" | grep -Ev '(Database|
 for DB in $DATABASES
 do
   # Dump the database with mysqldump (piped through gzip to conserve IO).
-  $MYSQLDUMP $MYSQL_CREDENTIALS --single-transaction --quick --lock-tables=false $DB | gzip -f -6 > {{ backup_path }}/databases/$DB.sql.gz
+  $MYSQLDUMP $MYSQL_CREDENTIALS --single-transaction --quick --lock-tables=false $DB | gzip -f -6 > {{ backup_path }}/databases/$DB-$(timestamp).sql.gz
 done
-
-# Sync the databases directory.
-$RSYNC -aqz -e 'ssh {{ backup_remote_connection_ssh_options }}' {{ backup_path }}/databases $REMOTE:{{ backup_remote_base_path }}/{{ backup_identifier }}
 {% endif %}

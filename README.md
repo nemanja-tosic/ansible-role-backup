@@ -2,18 +2,16 @@
 
 [![Build Status](https://travis-ci.org/geerlingguy/ansible-role-backup.svg?branch=master)](https://travis-ci.org/geerlingguy/ansible-role-backup)
 
-Back up Linux servers with a simple Rsync-and-Cron-based solution.
+Back up Linux servers with a simple tar-and-Cron-based solution.
 
 ## Requirements
 
 Requires the following to be installed:
 
-  - rsync
+  - tar
   - cron
 
 MySQL or a MySQL-compatible database needs to be installed if you'd like to enable MySQL database backups.
-
-It's also assumed you have a server running somewhere that can accept backup data via Rsync, and on this backup server, you need to install `rsync`, and configure accounts with SSH authentication that allows this role to deliver backups to a specific directory via SSH.
 
 ## Role Variables
 
@@ -47,22 +45,8 @@ Directories to back up. `{{ backup_user }}` must have read access to these dirs.
 Items to exclude from backups. Each item will be added as a new line in an excludes file used by the backup `rsync` command. Read [this article](http://articles.slicehost.com/2007/10/10/rsync-exclude-files-and-folders) for an explanation of how the `--exclude` option works.
 
     backup_identifier: id_here
-    backup_remote_connection: user@backup.example.com
 
-Options to control where the backup is delivered. It's assumed you'll be routing backups to a backup server via SSH. SSH key management and authentication should be managed separately from this role.
-
-    backup_remote_base_path: "~/backups"
-
-The full path on the remote backup server where backups will be stored (all backups for each server are inside a directory named by the `backup_identifier`).
-
-    backup_remote_host_name: ''
-    backup_remote_host_key: ''
-
-Add the remote host key details to ensure the host key is present and there are no SSH connection errors based on the key authentication. Leave blank if you've disabled host key checking or if the host key is already added to the server via some other mechanism.
-
-    backup_remote_connection_ssh_options: ''
-
-Add SSH connection options (e.g. `-p [port]`), as documented in the [SSH command manual](http://man.openbsd.org/ssh).
+Options to control where the backup is delivered.
 
     backup_mysql: true
     backup_mysql_user: dbdump
@@ -83,7 +67,6 @@ None.
       vars:
         backup_identifier: "{{ inventory_hostname|replace('.', '') }}"
         backup_user: "backupuser"
-        backup_remote_connection: user@backups.example.com
         backup_hour: "1"
         backup_minute: "15"
         backup_mysql: false
@@ -102,3 +85,5 @@ MIT / BSD
 ## Author Information
 
 This role was created in 2017 by [Jeff Geerling](https://www.jeffgeerling.com/), author of [Ansible for DevOps](https://www.ansiblefordevops.com/).
+
+Edited for use with tar by: Nemanja Tosic
