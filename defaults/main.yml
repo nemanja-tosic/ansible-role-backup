@@ -3,6 +3,7 @@
 backup_cron_job_state: present
 backup_hour: "3"
 backup_minute: "00"
+backup_mtime: 7
 
 # User under which backup jobs will run.
 backup_user: "{{ ansible_env.SUDO_USER | default(ansible_env.USER, true) | default(ansible_user_id, true) }}"

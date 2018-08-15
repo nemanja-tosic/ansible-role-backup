@@ -8,7 +8,7 @@
 
 mkdir -p {{ backup_path }}/{databases,directories}
 
-find {{ backup_path }}/{databases,directories} -type f -mtime +30 -exec rm {} \;
+find {{ backup_path }}/{databases,directories} -type f -mtime +{{ backup_mtime }} -exec rm {} \;
 
 # Common variables.
 timestamp() {
